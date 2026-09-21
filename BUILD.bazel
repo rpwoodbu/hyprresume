@@ -1,0 +1,45 @@
+load("@crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+rust_binary(
+    name = "hyprresume",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/main.rs",
+    edition = "2024",
+    rustc_env = {
+        "CARGO_PKG_VERSION": "0.5.0",
+    },
+    deps = all_crate_deps(
+        normal = True,
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "hyprresume_test",
+    size = "small",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/main.rs",
+    edition = "2024",
+    rustc_env = {
+        "CARGO_PKG_VERSION": "0.5.0",
+    },
+    data = [
+        ":hyprresume",
+        "//bazel:cargo",
+    ],
+    env = {
+        "PATH": "bazel:/bin:/usr/bin",
+    },
+    deps = all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+        proc_macro_dev = True,
+    ),
+)
