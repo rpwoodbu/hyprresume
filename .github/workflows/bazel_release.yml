@@ -1,0 +1,43 @@
+name: Bazel Release
+
+on:
+  push:
+    branches:
+      - bazel
+    tags:
+      - 'v*-bazel'
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Bazel
+        uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: true
+          repository-cache: true
+
+      - name: Run all tests
+        run: bazel test //...
+
+      - name: Build release binary
+        run: |
+          bazel build -c opt --stamp --remote_download_toplevel //:hyprresume
+          cp bazel-bin/hyprresume hyprresume-linux-amd64
+          chmod +x hyprresume-linux-amd64
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: hyprresume-linux-amd64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
